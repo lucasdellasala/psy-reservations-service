@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Therapist {
+  id                  String               @id @default(cuid())
+  name                String
+  timezone            String
+  createdAt           DateTime             @default(now())
+  availabilityWindows AvailabilityWindow[]
+  sessionTypes        SessionType[]
+  sessions            Session[]
+  therapistTopics     TherapistTopic[]
+
+  @@map("therapists")
+}
+
+model Topic {
+  id              String           @id @default(cuid())
+  name            String           @unique
+  therapistTopics TherapistTopic[]
+
+  @@map("topics")
+}
+
+model TherapistTopic {
+  therapistId String
+  topicId     String
+  therapist   Therapist @relation(fields: [therapistId], references: [id], onDelete: Cascade)
+  topic       Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([therapistId, topicId])
+  @@map("therapist_topics")
+}
+
+model SessionType {
+  id          String    @id @default(cuid())
+  therapistId String
+  name        String
+  durationMin Int
+  priceMinor  Int?
+  therapist   Therapist @relation(fields: [therapistId], references: [id], onDelete: Cascade)
+  sessions    Session[]
+
+  @@map("session_types")
+}
+
+model AvailabilityWindow {
+  id          String    @id @default(cuid())
+  therapistId String
+  weekday     Int
+  startMin    Int
+  endMin      Int
+  therapist   Therapist @relation(fields: [therapistId], references: [id], onDelete: Cascade)
+
+  @@map("availability_windows")
+}
+
+model Session {
+  id             String        @id @default(cuid())
+  therapistId    String
+  sessionTypeId  String
+  patientId      String
+  patientName    String?
+  patientEmail   String?
+  startUtc       DateTime
+  endUtc         DateTime
+  patientTz      String
+  status         SessionStatus @default(PENDING)
+  idempotencyKey String?       @unique
+  createdAt      DateTime      @default(now())
+  canceledAt     DateTime?
+  sessionType    SessionType   @relation(fields: [sessionTypeId], references: [id], onDelete: Cascade)
+  therapist      Therapist     @relation(fields: [therapistId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+enum SessionStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+}
