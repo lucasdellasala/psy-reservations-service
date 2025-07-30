@@ -1,98 +1,277 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🧠 Psy Reservations Service
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Un servicio de reservas para sesiones psicológicas construido con NestJS, PostgreSQL y Prisma.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 📋 Descripción
 
-## Description
+Este servicio permite gestionar reservas de sesiones psicológicas, incluyendo:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Gestión de Terapeutas**: Perfiles con zonas horarias y especialidades
+- **Catálogo de Temas**: Especialidades terapéuticas disponibles
+- **Tipos de Sesión**: Diferentes duraciones y precios
+- **Ventanas de Disponibilidad**: Horarios disponibles por terapeuta
+- **Reservas**: Sistema de reservas con estados (pendiente, confirmado, cancelado)
 
-## Project setup
+## 🏗️ Arquitectura
 
-```bash
-$ npm install
+### Stack Tecnológico
+
+- **Framework**: NestJS (Node.js)
+- **Base de Datos**: PostgreSQL
+- **ORM**: Prisma
+- **Logging**: Pino
+- **Documentación**: Swagger/OpenAPI
+- **Validación**: class-validator, class-transformer
+- **Testing**: Jest
+
+### Estructura del Proyecto
+
+```
+src/
+├── common/           # Módulo común (filtros, pipes, interceptors)
+├── config/          # Configuración de entorno
+├── health/          # Health checks
+├── logger/          # Sistema de logging
+├── prisma/          # Servicio de base de datos
+├── swagger/         # Configuración de documentación
+├── therapists/      # Gestión de terapeutas
+├── topics/          # Catálogo de temas
+└── main.ts          # Punto de entrada
 ```
 
-## Compile and run the project
+## 🚀 Instalación y Configuración
+
+### Prerrequisitos
+
+- Node.js 18+
+- PostgreSQL
+- npm o yarn
+
+### 1. Clonar y Instalar
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+git clone https://github.com/lucasdellasala/psy-reservations-service.git
+cd psy-reservations-service
+npm install
 ```
 
-## Run tests
+### 2. Configurar Variables de Entorno
+
+Crear archivo `.env`:
+
+```env
+PORT=3000
+NODE_ENV=development
+TZ=UTC
+DATABASE_URL=postgresql://postgres:password@localhost:5432/psy_reservations
+```
+
+### 3. Configurar Base de Datos
 
 ```bash
-# unit tests
-$ npm run test
+# Crear base de datos
+createdb psy_reservations
 
-# e2e tests
-$ npm run test:e2e
+# Ejecutar migraciones
+npm run db:migrate
 
-# test coverage
-$ npm run test:cov
+# Poblar con datos de ejemplo
+npm run db:seed
 ```
 
-## Deployment
+## 🛠️ Scripts Disponibles
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Desarrollo
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Servidor de desarrollo
+npm run start:dev
+
+# Build del proyecto
+npm run build
+
+# Formatear código
+npm run format
+
+# Linting
+npm run lint
+npm run lint:check
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Base de Datos
 
-## Resources
+```bash
+# Generar cliente Prisma
+npm run db:generate
 
-Check out a few resources that may come in handy when working with NestJS:
+# Ejecutar migraciones
+npm run db:migrate
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# Abrir Prisma Studio
+npm run db:studio
 
-## Support
+# Poblar con datos de ejemplo
+npm run db:seed
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Resetear base de datos
+npm run db:reset
+```
 
-## Stay in touch
+### Testing
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+# Tests unitarios
+npm test
 
-## License
+# Tests con coverage
+npm run test:cov
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Tests e2e
+npm run test:e2e
+```
+
+## 📚 API Endpoints
+
+### Health Check
+
+- `GET /health` - Estado del servicio
+
+### Topics (Temas)
+
+- `GET /topics` - Lista de temas disponibles
+
+### Therapists (Terapeutas)
+
+- `GET /therapists/:id` - Perfil del terapeuta con temas
+- `GET /therapists/:id/session-types` - Tipos de sesión del terapeuta
+
+### Documentación Swagger
+
+- `GET /api` - Documentación interactiva de la API
+
+## 🗄️ Modelos de Datos
+
+### Therapist
+
+```typescript
+{
+  id: string;
+  name: string;
+  timezone: string;
+  createdAt: DateTime;
+}
+```
+
+### Topic
+
+```typescript
+{
+  id: string;
+  name: string;
+}
+```
+
+### SessionType
+
+```typescript
+{
+  id: string
+  therapistId: string
+  name: string
+  durationMin: number
+  priceMinor?: number
+}
+```
+
+### AvailabilityWindow
+
+```typescript
+{
+  id: string;
+  therapistId: string;
+  weekday: number;
+  startMin: number;
+  endMin: number;
+}
+```
+
+### Session
+
+```typescript
+{
+  id: string
+  therapistId: string
+  sessionTypeId: string
+  patientId: string
+  patientName?: string
+  patientEmail?: string
+  startUtc: DateTime
+  endUtc: DateTime
+  patientTz: string
+  status: 'pending' | 'confirmed' | 'canceled'
+  idempotencyKey?: string
+  createdAt: DateTime
+  canceledAt?: DateTime
+}
+```
+
+## 🧪 Testing
+
+El proyecto incluye tests unitarios completos para:
+
+- **Controllers**: Tests de endpoints con mocks
+- **Services**: Tests de lógica de negocio
+- **Edge Cases**: Casos de error y validaciones
+
+```bash
+# Ejecutar todos los tests
+npm test
+
+# Tests específicos
+npm test -- --testPathPattern=topics
+npm test -- --testPathPattern=therapists
+```
+
+## 🔧 Configuración de Desarrollo
+
+### Herramientas de Calidad
+
+- **ESLint**: Análisis estático de código
+- **Prettier**: Formateo automático
+- **Husky**: Git hooks
+- **lint-staged**: Linting en commits
+
+### Configuración de Git
+
+```bash
+# Configurar autocrlf para Windows
+git config core.autocrlf true
+
+# Configurar usuario
+git config user.name "Tu Nombre"
+git config user.email "tu@email.com"
+```
+
+## 📊 Estado del Proyecto
+
+### ✅ Implementado
+
+- [x] Configuración base de NestJS
+- [x] Sistema de logging con Pino
+- [x] Documentación Swagger
+- [x] Base de datos PostgreSQL con Prisma
+- [x] Módulo de health checks
+- [x] Módulo de topics
+- [x] Módulo de therapists
+- [x] Tests unitarios completos
+- [x] Filtros globales de excepciones
+- [x] Validación de datos
+- [x] Seeds de datos de ejemplo
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
+
+## 👥 Autor
+
+- **Lucas Della Sala** - _Desarrollo inicial_ - [@lucasdellasala](https://github.com/lucasdellasala)
