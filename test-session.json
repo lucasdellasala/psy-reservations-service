@@ -1,0 +1,9 @@
+{
+  "therapistId": "cmdqpytum000buyfo2i65xv5x",
+  "sessionTypeId": "cmdqpyvkw000yuyfofb47i1dx",
+  "startUtc": "2025-01-29T20:00:00Z",
+  "patientId": "user123",
+  "patientName": "Lucas",
+  "patientEmail": "lucas@mail.com",
+  "patientTz": "America/Argentina/Buenos_Aires"
+}

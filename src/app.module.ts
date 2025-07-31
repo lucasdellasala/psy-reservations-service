@@ -7,6 +7,7 @@ import { CommonModule } from './common/common.module';
 import { HealthModule } from './health/health.module';
 import { TopicsModule } from './topics/topics.module';
 import { TherapistsModule } from './therapists/therapists.module';
+import { SessionsModule } from './sessions/sessions.module';
 import { HttpLoggerMiddleware } from './logger/http-logger.middleware';
 
 @Module({
@@ -17,6 +18,7 @@ import { HttpLoggerMiddleware } from './logger/http-logger.middleware';
     HealthModule,
     TopicsModule,
     TherapistsModule,
+    SessionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
