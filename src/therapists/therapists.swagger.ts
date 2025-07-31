@@ -1,10 +1,11 @@
 export const TherapistsSwagger = {
   tags: 'therapists',
   getAll: {
-    operation: { summary: 'Get all therapists' },
+    operation: { summary: 'Get therapists with optional filters' },
     response: {
       status: 200,
-      description: 'List of therapists with topics and modalities',
+      description:
+        'List of therapists with topics and modalities, filtered by criteria',
       schema: {
         type: 'array',
         items: {

@@ -1,7 +1,15 @@
-import { Controller, Get, Param, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  NotFoundException,
+  Query,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { TherapistsService } from './therapists.service';
 import { TherapistsSwagger } from './therapists.swagger';
+import { FindTherapistsDto } from './dto/find-therapists.dto';
+import { FindTherapistsQuery } from './decorators/find-therapists-query.decorator';
 
 @ApiTags(TherapistsSwagger.tags)
 @Controller('therapists')
@@ -10,9 +18,10 @@ export class TherapistsController {
 
   @Get()
   @ApiOperation(TherapistsSwagger.getAll.operation)
+  @FindTherapistsQuery()
   @ApiResponse(TherapistsSwagger.getAll.response)
-  async findAll(): Promise<any[]> {
-    return this.therapistsService.findAll();
+  async findAll(@Query() filters: FindTherapistsDto): Promise<any[]> {
+    return this.therapistsService.findWithFilters(filters);
   }
 
   @Get(':id')
