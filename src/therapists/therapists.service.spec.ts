@@ -19,6 +19,7 @@ describe('TherapistsService', () => {
     },
     session: {
       findMany: jest.fn(),
+      findFirst: jest.fn(),
     },
   };
 
@@ -465,6 +466,164 @@ describe('TherapistsService', () => {
 
       expect(result).toHaveLength(2);
       expect(result.map(t => t.id)).toEqual(['1', '2']);
+    });
+  });
+
+  describe('hasOverlap', () => {
+    it('should return true when there is an exact overlap', async () => {
+      const mockOverlappingSession = {
+        id: 'session-1',
+        startUtc: new Date('2024-01-15T10:00:00.000Z'),
+        endUtc: new Date('2024-01-15T11:00:00.000Z'),
+      };
+
+      mockPrismaService.session.findFirst.mockResolvedValue(
+        mockOverlappingSession,
+      );
+
+      const result = await service.hasOverlap(
+        'therapist-1',
+        '2024-01-15T10:00:00.000Z',
+        '2024-01-15T11:00:00.000Z',
+      );
+
+      expect(result).toBe(true);
+      expect(mockPrismaService.session.findFirst).toHaveBeenCalledWith({
+        where: {
+          therapistId: 'therapist-1',
+          status: { not: 'CANCELED' },
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          OR: expect.arrayContaining([
+            {
+              startUtc: { equals: '2024-01-15T10:00:00.000Z' },
+              endUtc: { equals: '2024-01-15T11:00:00.000Z' },
+            },
+          ]),
+        },
+      } as any);
+    });
+
+    it('should return true when there is a partial overlap (existing session starts before)', async () => {
+      const mockOverlappingSession = {
+        id: 'session-1',
+        startUtc: new Date('2024-01-15T09:30:00.000Z'),
+        endUtc: new Date('2024-01-15T10:30:00.000Z'),
+      };
+
+      mockPrismaService.session.findFirst.mockResolvedValue(
+        mockOverlappingSession,
+      );
+
+      const result = await service.hasOverlap(
+        'therapist-1',
+        '2024-01-15T10:00:00.000Z',
+        '2024-01-15T11:00:00.000Z',
+      );
+
+      expect(result).toBe(true);
+    });
+
+    it('should return true when there is a partial overlap (existing session starts during)', async () => {
+      const mockOverlappingSession = {
+        id: 'session-1',
+        startUtc: new Date('2024-01-15T10:30:00.000Z'),
+        endUtc: new Date('2024-01-15T11:30:00.000Z'),
+      };
+
+      mockPrismaService.session.findFirst.mockResolvedValue(
+        mockOverlappingSession,
+      );
+
+      const result = await service.hasOverlap(
+        'therapist-1',
+        '2024-01-15T10:00:00.000Z',
+        '2024-01-15T11:00:00.000Z',
+      );
+
+      expect(result).toBe(true);
+    });
+
+    it('should return true when existing session contains the range completely', async () => {
+      const mockOverlappingSession = {
+        id: 'session-1',
+        startUtc: new Date('2024-01-15T09:00:00.000Z'),
+        endUtc: new Date('2024-01-15T12:00:00.000Z'),
+      };
+
+      mockPrismaService.session.findFirst.mockResolvedValue(
+        mockOverlappingSession,
+      );
+
+      const result = await service.hasOverlap(
+        'therapist-1',
+        '2024-01-15T10:00:00.000Z',
+        '2024-01-15T11:00:00.000Z',
+      );
+
+      expect(result).toBe(true);
+    });
+
+    it('should return true when range contains existing session completely', async () => {
+      const mockOverlappingSession = {
+        id: 'session-1',
+        startUtc: new Date('2024-01-15T10:30:00.000Z'),
+        endUtc: new Date('2024-01-15T10:45:00.000Z'),
+      };
+
+      mockPrismaService.session.findFirst.mockResolvedValue(
+        mockOverlappingSession,
+      );
+
+      const result = await service.hasOverlap(
+        'therapist-1',
+        '2024-01-15T10:00:00.000Z',
+        '2024-01-15T11:00:00.000Z',
+      );
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false when there is no overlap', async () => {
+      mockPrismaService.session.findFirst.mockResolvedValue(null);
+
+      const result = await service.hasOverlap(
+        'therapist-1',
+        '2024-01-15T10:00:00.000Z',
+        '2024-01-15T11:00:00.000Z',
+      );
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when sessions are adjacent (not overlapping)', async () => {
+      mockPrismaService.session.findFirst.mockResolvedValue(null);
+
+      const result = await service.hasOverlap(
+        'therapist-1',
+        '2024-01-15T10:00:00.000Z',
+        '2024-01-15T11:00:00.000Z',
+      );
+
+      expect(result).toBe(false);
+    });
+
+    it('should ignore canceled sessions', async () => {
+      mockPrismaService.session.findFirst.mockResolvedValue(null);
+
+      await service.hasOverlap(
+        'therapist-1',
+        '2024-01-15T10:00:00.000Z',
+        '2024-01-15T11:00:00.000Z',
+      );
+
+      expect(mockPrismaService.session.findFirst).toHaveBeenCalledWith({
+        where: {
+          therapistId: 'therapist-1',
+          status: { not: 'CANCELED' },
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          OR: expect.any(Array),
+        },
+      } as any);
     });
   });
 });

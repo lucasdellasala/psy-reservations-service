@@ -275,7 +275,7 @@ export class TherapistsService {
     while (currentStart.plus({ minutes: sessionDuration }) <= windowEnd) {
       const slotEnd = currentStart.plus({ minutes: sessionDuration });
 
-      if (!this.hasOverlap(currentStart, slotEnd, existingSessions)) {
+      if (!this.hasOverlapInMemory(currentStart, slotEnd, existingSessions)) {
         const startInPatientTz = this.timeService.toTz(currentStart, patientTz);
         const endInPatientTz = this.timeService.toTz(slotEnd, patientTz);
 
@@ -299,7 +299,49 @@ export class TherapistsService {
     return bookableSlots;
   }
 
-  private hasOverlap(
+  async hasOverlap(
+    therapistId: string,
+    startUtc: string,
+    endUtc: string,
+  ): Promise<boolean> {
+    const overlappingSessions = await this.prisma.session.findFirst({
+      where: {
+        therapistId,
+        status: { not: 'CANCELED' },
+        OR: [
+          // Solapamiento exacto
+          {
+            startUtc: { equals: startUtc },
+            endUtc: { equals: endUtc },
+          },
+          // Solapamiento parcial: sesión existente empieza antes y termina durante
+          {
+            startUtc: { lt: startUtc },
+            endUtc: { gt: startUtc, lte: endUtc },
+          },
+          // Solapamiento parcial: sesión existente empieza durante y termina después
+          {
+            startUtc: { gte: startUtc, lt: endUtc },
+            endUtc: { gt: endUtc },
+          },
+          // Solapamiento contenido: sesión existente contiene completamente el rango
+          {
+            startUtc: { lte: startUtc },
+            endUtc: { gte: endUtc },
+          },
+          // Solapamiento contenido: rango contiene completamente la sesión existente
+          {
+            startUtc: { gte: startUtc },
+            endUtc: { lte: endUtc },
+          },
+        ],
+      },
+    });
+
+    return !!overlappingSessions;
+  }
+
+  private hasOverlapInMemory(
     slotStart: DateTime,
     slotEnd: DateTime,
     existingSessions: { startUtc: string; endUtc: string }[],
