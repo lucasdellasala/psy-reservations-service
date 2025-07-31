@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   UnprocessableEntityException,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DbService } from '../prisma/db.service';
@@ -99,6 +100,62 @@ export class SessionsService {
     );
 
     return session;
+  }
+
+  async findOne(id: string) {
+    const session = await this.prisma.session.findUnique({
+      where: { id },
+      include: {
+        sessionType: {
+          select: {
+            name: true,
+            durationMin: true,
+            modality: true,
+          },
+        },
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
+    const startInPatientTz = DateTime.fromJSDate(session.startUtc)
+      .setZone(session.patientTz)
+      .toISO();
+    const endInPatientTz = DateTime.fromJSDate(session.endUtc)
+      .setZone(session.patientTz)
+      .toISO();
+
+    return {
+      ...session,
+      startInPatientTz,
+      endInPatientTz,
+    };
+  }
+
+  async cancelSession(id: string) {
+    const session = await this.prisma.session.findUnique({
+      where: { id },
+    });
+
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
+    if (session.status === 'CANCELED') {
+      return session;
+    }
+
+    const updatedSession = await this.prisma.session.update({
+      where: { id },
+      data: {
+        status: 'CANCELED',
+        canceledAt: new Date(),
+      },
+    });
+
+    return updatedSession;
   }
 
   private async validateAvailabilityWindow(

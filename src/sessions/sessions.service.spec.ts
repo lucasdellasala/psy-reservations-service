@@ -9,6 +9,7 @@ import { CreateSessionDto } from './dto/create-session.dto';
 import {
   ConflictException,
   UnprocessableEntityException,
+  NotFoundException,
 } from '@nestjs/common';
 import { DateTime } from 'luxon';
 
@@ -23,6 +24,8 @@ describe('SessionsService', () => {
       session: {
         findFirst: jest.fn(),
         create: jest.fn(),
+        findUnique: jest.fn(),
+        update: jest.fn(),
       },
       sessionType: {
         findUnique: jest.fn(),
@@ -307,6 +310,116 @@ describe('SessionsService', () => {
         't1',
         '2025-07-29T20:00:00Z',
         expectedEndUtc,
+      );
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return session with timezone-converted times', async () => {
+      const mockSession = {
+        id: 'session-1',
+        therapistId: 't1',
+        sessionTypeId: 'st1',
+        patientId: 'user123',
+        patientName: 'Lucas',
+        patientEmail: 'lucas@mail.com',
+        startUtc: new Date('2025-07-29T20:00:00Z'),
+        endUtc: new Date('2025-07-29T21:00:00Z'),
+        patientTz: 'America/Argentina/Buenos_Aires',
+        status: 'CONFIRMED',
+        idempotencyKey: 'test-key',
+        createdAt: new Date(),
+        canceledAt: null,
+        sessionType: {
+          name: '60 min session',
+          durationMin: 60,
+          modality: 'online',
+        },
+      };
+
+      mockPrismaService.session.findUnique.mockResolvedValue(mockSession);
+
+      const result = await service.findOne('session-1');
+
+      expect(result).toHaveProperty('startInPatientTz');
+      expect(result).toHaveProperty('endInPatientTz');
+      expect(result.startInPatientTz).toContain('2025-07-29');
+      expect(result.endInPatientTz).toContain('2025-07-29');
+      expect(mockPrismaService.session.findUnique).toHaveBeenCalledWith({
+        where: { id: 'session-1' },
+        include: {
+          sessionType: {
+            select: {
+              name: true,
+              durationMin: true,
+              modality: true,
+            },
+          },
+        },
+      });
+    });
+
+    it('should throw NotFoundException when session does not exist', async () => {
+      mockPrismaService.session.findUnique.mockResolvedValue(null);
+
+      await expect(service.findOne('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('cancelSession', () => {
+    it('should cancel a session successfully', async () => {
+      const mockSession = {
+        id: 'session-1',
+        status: 'CONFIRMED',
+        canceledAt: null,
+      };
+
+      const updatedSession = {
+        ...mockSession,
+        status: 'CANCELED',
+        canceledAt: new Date(),
+      };
+
+      mockPrismaService.session.findUnique.mockResolvedValue(mockSession);
+      mockPrismaService.session.update.mockResolvedValue(updatedSession);
+
+      const result = await service.cancelSession('session-1');
+
+      expect(result.status).toBe('CANCELED');
+      expect(result.canceledAt).toBeDefined();
+      expect(mockPrismaService.session.update).toHaveBeenCalledWith({
+        where: { id: 'session-1' },
+        data: {
+          status: 'CANCELED',
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          canceledAt: expect.any(Date),
+        },
+      });
+    });
+
+    it('should return session unchanged if already canceled (idempotent)', async () => {
+      const mockSession = {
+        id: 'session-1',
+        status: 'CANCELED',
+        canceledAt: new Date('2025-07-29T10:00:00Z'),
+      };
+
+      mockPrismaService.session.findUnique.mockResolvedValue(mockSession);
+
+      const result = await service.cancelSession('session-1');
+
+      expect(result.status).toBe('CANCELED');
+      expect(result.canceledAt).toEqual(new Date('2025-07-29T10:00:00Z'));
+      expect(mockPrismaService.session.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when session does not exist', async () => {
+      mockPrismaService.session.findUnique.mockResolvedValue(null);
+
+      await expect(service.cancelSession('non-existent')).rejects.toThrow(
+        NotFoundException,
       );
     });
   });

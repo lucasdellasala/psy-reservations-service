@@ -2,7 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SessionsController } from './sessions.controller';
 import { SessionsService } from './sessions.service';
 import { CreateSessionDto } from './dto/create-session.dto';
-import { BadRequestException, HttpStatus } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  NotFoundException,
+} from '@nestjs/common';
 
 describe('SessionsController', () => {
   let controller: SessionsController;
@@ -11,6 +15,8 @@ describe('SessionsController', () => {
   beforeEach(async () => {
     const mockSessionsServiceObj = {
       createSession: jest.fn(),
+      findOne: jest.fn(),
+      cancelSession: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -170,6 +176,128 @@ describe('SessionsController', () => {
           controller.createSession(createSessionDto, uuid),
         ).rejects.toThrow(BadRequestException);
       }
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return session successfully', async () => {
+      const mockSession = {
+        id: 'session-1',
+        therapistId: 't1',
+        sessionTypeId: 'st1',
+        patientId: 'user123',
+        patientName: 'Lucas',
+        patientEmail: 'lucas@mail.com',
+        startUtc: new Date('2025-07-29T20:00:00Z'),
+        endUtc: new Date('2025-07-29T21:00:00Z'),
+        patientTz: 'America/Argentina/Buenos_Aires',
+        status: 'CONFIRMED' as const,
+        idempotencyKey: 'test-key',
+        createdAt: new Date(),
+        canceledAt: null,
+        startInPatientTz: '2025-07-29T17:00:00.000-03:00',
+        endInPatientTz: '2025-07-29T18:00:00.000-03:00',
+        sessionType: {
+          name: '60 min session',
+          durationMin: 60,
+          modality: 'online' as const,
+        },
+      };
+
+      mockSessionsService.findOne.mockResolvedValue(mockSession);
+
+      const result = await controller.findOne('session-1');
+
+      expect(result).toEqual({
+        statusCode: HttpStatus.OK,
+        message: 'Session retrieved successfully',
+        data: mockSession,
+      });
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(mockSessionsService.findOne).toHaveBeenCalledWith('session-1');
+    });
+
+    it('should throw NotFoundException when session does not exist', async () => {
+      mockSessionsService.findOne.mockRejectedValue(
+        new NotFoundException('Session not found'),
+      );
+
+      await expect(controller.findOne('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('cancelSession', () => {
+    it('should cancel session successfully', async () => {
+      const mockSession = {
+        id: 'session-1',
+        therapistId: 't1',
+        sessionTypeId: 'st1',
+        patientId: 'user123',
+        patientName: 'Lucas',
+        patientEmail: 'lucas@mail.com',
+        startUtc: new Date('2025-07-29T20:00:00Z'),
+        endUtc: new Date('2025-07-29T21:00:00Z'),
+        patientTz: 'America/Argentina/Buenos_Aires',
+        status: 'CANCELED' as const,
+        idempotencyKey: 'test-key',
+        createdAt: new Date(),
+        canceledAt: new Date(),
+      };
+
+      mockSessionsService.cancelSession.mockResolvedValue(mockSession);
+
+      const result = await controller.cancelSession('session-1');
+
+      expect(result).toEqual({
+        statusCode: HttpStatus.OK,
+        message: 'Session canceled successfully',
+        data: mockSession,
+      });
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(mockSessionsService.cancelSession).toHaveBeenCalledWith(
+        'session-1',
+      );
+    });
+
+    it('should return session unchanged if already canceled (idempotent)', async () => {
+      const mockSession = {
+        id: 'session-1',
+        therapistId: 't1',
+        sessionTypeId: 'st1',
+        patientId: 'user123',
+        patientName: 'Lucas',
+        patientEmail: 'lucas@mail.com',
+        startUtc: new Date('2025-07-29T20:00:00Z'),
+        endUtc: new Date('2025-07-29T21:00:00Z'),
+        patientTz: 'America/Argentina/Buenos_Aires',
+        status: 'CANCELED' as const,
+        idempotencyKey: 'test-key',
+        createdAt: new Date(),
+        canceledAt: new Date('2025-07-29T10:00:00Z'),
+      };
+
+      mockSessionsService.cancelSession.mockResolvedValue(mockSession);
+
+      const result = await controller.cancelSession('session-1');
+
+      expect(result).toEqual({
+        statusCode: HttpStatus.OK,
+        message: 'Session canceled successfully',
+        data: mockSession,
+      });
+    });
+
+    it('should throw NotFoundException when session does not exist', async () => {
+      mockSessionsService.cancelSession.mockRejectedValue(
+        new NotFoundException('Session not found'),
+      );
+
+      await expect(controller.cancelSession('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

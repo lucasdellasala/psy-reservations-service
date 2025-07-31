@@ -1,5 +1,10 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation, ApiHeader, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiHeader,
+  ApiResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 
 export const CreateSessionDocs = () =>
   applyDecorators(
@@ -32,5 +37,48 @@ export const CreateSessionDocs = () =>
     ApiResponse({
       status: 400,
       description: 'Bad request - Invalid data or missing Idempotency-Key',
+    }),
+  );
+
+export const GetSessionDocs = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get session by ID',
+      description:
+        'Retrieve a session with timezone-converted start and end times',
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'Session ID',
+      type: 'string',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Session retrieved successfully',
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Session not found',
+    }),
+  );
+
+export const CancelSessionDocs = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Cancel session',
+      description: 'Cancel a session (idempotent operation)',
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'Session ID',
+      type: 'string',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Session canceled successfully',
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Session not found',
     }),
   );

@@ -1,6 +1,9 @@
 import {
   Controller,
   Post,
+  Get,
+  Patch,
+  Param,
   Body,
   Headers,
   HttpCode,
@@ -10,7 +13,11 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { SessionsService } from './sessions.service';
 import { CreateSessionDto } from './dto/create-session.dto';
-import { CreateSessionDocs } from './sessions.swagger';
+import {
+  CreateSessionDocs,
+  GetSessionDocs,
+  CancelSessionDocs,
+} from './sessions.swagger';
 
 @ApiTags('Sessions')
 @Controller('sessions')
@@ -50,6 +57,29 @@ export class SessionsController {
     return {
       statusCode: HttpStatus.CREATED,
       message: 'Session created successfully',
+      data: session,
+    };
+  }
+
+  @Get(':id')
+  @GetSessionDocs()
+  async findOne(@Param('id') id: string) {
+    const session = await this.sessionsService.findOne(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Session retrieved successfully',
+      data: session,
+    };
+  }
+
+  @Patch(':id/cancel')
+  @HttpCode(HttpStatus.OK)
+  @CancelSessionDocs()
+  async cancelSession(@Param('id') id: string) {
+    const session = await this.sessionsService.cancelSession(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Session canceled successfully',
       data: session,
     };
   }
