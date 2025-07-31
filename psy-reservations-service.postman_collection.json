@@ -1,0 +1,451 @@
+{
+  "info": {
+    "name": "Psy Reservations Service",
+    "description": "Colección completa de endpoints para el servicio de reservas psicológicas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "therapistId",
+      "value": "cmdqpytum000buyfo2i65xv5x",
+      "type": "string"
+    },
+    {
+      "key": "sessionTypeId",
+      "value": "cmdqpyvkw000yuyfofb47i1dx",
+      "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "cmdqpyvkw000yuyfofb47i1dx",
+      "type": "string"
+    },
+    {
+      "key": "idempotencyKey",
+      "value": "550e8400-e29b-41d4-a716-446655440000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "GET Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Verificar el estado del servicio"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Topics",
+      "item": [
+        {
+          "name": "GET All Topics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/topics",
+              "host": ["{{baseUrl}}"],
+              "path": ["topics"]
+            },
+            "description": "Obtener todos los temas disponibles"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Therapists",
+      "item": [
+        {
+          "name": "GET All Therapists",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapists",
+              "host": ["{{baseUrl}}"],
+              "path": ["therapists"]
+            },
+            "description": "Obtener todos los terapeutas"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Therapists with Filters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapists?topicIds=anxiety,depression&modality=online&limit=5&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["therapists"],
+              "query": [
+                {
+                  "key": "topicIds",
+                  "value": "anxiety,depression",
+                  "description": "IDs de temas separados por coma"
+                },
+                {
+                  "key": "modality",
+                  "value": "online",
+                  "description": "Modalidad: online o in_person"
+                },
+                {
+                  "key": "limit",
+                  "value": "5",
+                  "description": "Número de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Número de resultados a saltar"
+                }
+              ]
+            },
+            "description": "Obtener terapeutas con filtros"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Therapists with Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapists?weekStart=2025-01-27&sessionTypeId={{sessionTypeId}}&stepMin=15&orderBy=scarcity",
+              "host": ["{{baseUrl}}"],
+              "path": ["therapists"],
+              "query": [
+                {
+                  "key": "weekStart",
+                  "value": "2025-01-27",
+                  "description": "Fecha de inicio de la semana (YYYY-MM-DD)"
+                },
+                {
+                  "key": "sessionTypeId",
+                  "value": "{{sessionTypeId}}",
+                  "description": "ID del tipo de sesión"
+                },
+                {
+                  "key": "stepMin",
+                  "value": "15",
+                  "description": "Paso en minutos para cálculo de disponibilidad"
+                },
+                {
+                  "key": "orderBy",
+                  "value": "scarcity",
+                  "description": "Ordenar por escasez de slots disponibles"
+                }
+              ]
+            },
+            "description": "Obtener terapeutas con cálculo de disponibilidad y ordenamiento por escasez"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Therapist by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapists/{{therapistId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["therapists", "{{therapistId}}"]
+            },
+            "description": "Obtener un terapeuta específico por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Therapist Session Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapists/{{therapistId}}/session-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["therapists", "{{therapistId}}", "session-types"]
+            },
+            "description": "Obtener los tipos de sesión de un terapeuta"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Therapist Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapists/{{therapistId}}/availability?weekStart=2025-01-27&sessionTypeId={{sessionTypeId}}&patientTz=America/Argentina/Buenos_Aires&stepMin=15",
+              "host": ["{{baseUrl}}"],
+              "path": ["therapists", "{{therapistId}}", "availability"],
+              "query": [
+                {
+                  "key": "weekStart",
+                  "value": "2025-01-27",
+                  "description": "Fecha de inicio de la semana (YYYY-MM-DD)"
+                },
+                {
+                  "key": "sessionTypeId",
+                  "value": "{{sessionTypeId}}",
+                  "description": "ID del tipo de sesión"
+                },
+                {
+                  "key": "patientTz",
+                  "value": "America/Argentina/Buenos_Aires",
+                  "description": "Zona horaria del paciente"
+                },
+                {
+                  "key": "stepMin",
+                  "value": "15",
+                  "description": "Paso en minutos para discretización"
+                }
+              ]
+            },
+            "description": "Obtener disponibilidad de un terapeuta para una semana específica"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sessions",
+      "item": [
+        {
+          "name": "POST Create Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotencyKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"therapistId\": \"{{therapistId}}\",\n  \"sessionTypeId\": \"{{sessionTypeId}}\",\n  \"startUtc\": \"2025-01-29T20:00:00Z\",\n  \"patientId\": \"user123\",\n  \"patientName\": \"Lucas\",\n  \"patientEmail\": \"lucas@mail.com\",\n  \"patientTz\": \"America/Argentina/Buenos_Aires\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["sessions"]
+            },
+            "description": "Crear una nueva sesión con idempotencia"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Session by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sessions/{{sessionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["sessions", "{{sessionId}}"]
+            },
+            "description": "Obtener detalles de una sesión con conversión de zonas horarias"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Cancel Session",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sessions/{{sessionId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["sessions", "{{sessionId}}", "cancel"]
+            },
+            "description": "Cancelar una sesión (idempotente)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Examples",
+      "item": [
+        {
+          "name": "GET Therapists - Filter by Topics (OR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapists?topicIds=anxiety,depression",
+              "host": ["{{baseUrl}}"],
+              "path": ["therapists"],
+              "query": [
+                {
+                  "key": "topicIds",
+                  "value": "anxiety,depression"
+                }
+              ]
+            },
+            "description": "Buscar terapeutas que tengan CUALQUIERA de los temas (OR logic)"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Therapists - Filter by Topics (AND)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapists?topicIds=anxiety,depression&requireAll=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["therapists"],
+              "query": [
+                {
+                  "key": "topicIds",
+                  "value": "anxiety,depression"
+                },
+                {
+                  "key": "requireAll",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Buscar terapeutas que tengan TODOS los temas (AND logic)"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Therapists - Filter by Modality",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapists?modality=online",
+              "host": ["{{baseUrl}}"],
+              "path": ["therapists"],
+              "query": [
+                {
+                  "key": "modality",
+                  "value": "online"
+                }
+              ]
+            },
+            "description": "Buscar terapeutas que ofrezcan sesiones online"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Therapists - Pagination",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapists?limit=3&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["therapists"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "3"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Obtener primeros 3 terapeutas"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Therapists - Combined Filters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapists?topicIds=anxiety&modality=online&limit=5&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["therapists"],
+              "query": [
+                {
+                  "key": "topicIds",
+                  "value": "anxiety"
+                },
+                {
+                  "key": "modality",
+                  "value": "online"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Combinación de filtros: temas + modalidad + paginación"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create Session - Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "123e4567-e89b-12d3-a456-426614174000"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"therapistId\": \"{{therapistId}}\",\n  \"sessionTypeId\": \"{{sessionTypeId}}\",\n  \"startUtc\": \"2025-01-29T20:00:00Z\",\n  \"patientId\": \"user123\",\n  \"patientName\": \"Lucas\",\n  \"patientEmail\": \"lucas@mail.com\",\n  \"patientTz\": \"America/Argentina/Buenos_Aires\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["sessions"]
+            },
+            "description": "Ejemplo de creación de sesión con datos reales"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
