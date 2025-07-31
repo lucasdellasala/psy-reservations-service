@@ -31,4 +31,25 @@ export const FindTherapistsQuery = () =>
       description: 'Number of results to skip',
       type: Number,
     }),
+    ApiQuery({
+      name: 'weekStart',
+      required: false,
+      description: 'Week start date (YYYY-MM-DD) for availability calculation',
+    }),
+    ApiQuery({
+      name: 'sessionTypeId',
+      required: false,
+      description: 'Session type ID for availability calculation',
+    }),
+    ApiQuery({
+      name: 'stepMin',
+      required: false,
+      description: 'Step in minutes for availability calculation',
+      type: Number,
+    }),
+    ApiQuery({
+      name: 'orderBy',
+      required: false,
+      description: 'Order by scarcity (ascending by free slots count)',
+    }),
   );

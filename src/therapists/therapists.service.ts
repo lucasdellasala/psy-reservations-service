@@ -115,7 +115,17 @@ export class TherapistsService {
   }
 
   async findWithFilters(filters: FindTherapistsDto) {
-    const { topicIds, requireAll, modality, limit = 10, offset = 0 } = filters;
+    const {
+      topicIds,
+      requireAll,
+      modality,
+      limit = 10,
+      offset = 0,
+      weekStart,
+      sessionTypeId,
+      stepMin = 15,
+      orderBy,
+    } = filters;
 
     let therapists = await this.prisma.therapist.findMany({
       select: {
@@ -169,9 +179,7 @@ export class TherapistsService {
       });
     }
 
-    const paginatedTherapists = therapists.slice(offset, offset + limit);
-
-    return paginatedTherapists.map(therapist => {
+    let therapistsWithAvailability = therapists.map(therapist => {
       const modalities = [
         ...new Set(therapist.sessionTypes.map(st => st.modality)),
       ];
@@ -182,8 +190,72 @@ export class TherapistsService {
         timezone: therapist.timezone,
         topics: therapist.therapistTopics.map(tt => tt.topic),
         modalities,
+        availabilitySummary: { freeSlotsCount: 0 },
       };
     });
+
+    if (weekStart && sessionTypeId) {
+      const sessionType = await this.prisma.sessionType.findUnique({
+        where: { id: sessionTypeId },
+        select: { durationMin: true, modality: true },
+      });
+
+      if (sessionType) {
+        const availabilityPromises = therapistsWithAvailability.map(
+          async therapist => {
+            try {
+              const availability = await this.getAvailability(
+                therapist.id,
+                sessionTypeId,
+                weekStart,
+                'UTC',
+                stepMin,
+              );
+
+              const totalFreeSlots = Object.values(
+                availability.availability,
+              ).reduce(
+                (total, windows) =>
+                  total +
+                  windows.reduce(
+                    (windowTotal, window) =>
+                      windowTotal + window.bookableStarts.length,
+                    0,
+                  ),
+                0,
+              );
+
+              return {
+                ...therapist,
+                availabilitySummary: { freeSlotsCount: totalFreeSlots },
+              };
+            } catch {
+              return {
+                ...therapist,
+                availabilitySummary: { freeSlotsCount: 0 },
+              };
+            }
+          },
+        );
+
+        therapistsWithAvailability = await Promise.all(availabilityPromises);
+      }
+    }
+
+    if (orderBy === 'scarcity') {
+      therapistsWithAvailability.sort(
+        (a, b) =>
+          a.availabilitySummary.freeSlotsCount -
+          b.availabilitySummary.freeSlotsCount,
+      );
+    }
+
+    const paginatedTherapists = therapistsWithAvailability.slice(
+      offset,
+      offset + limit,
+    );
+
+    return paginatedTherapists;
   }
 
   async getAvailability(

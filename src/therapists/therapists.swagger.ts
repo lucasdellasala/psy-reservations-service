@@ -31,6 +31,12 @@ export const TherapistsSwagger = {
                 enum: ['online', 'in_person'],
               },
             },
+            availabilitySummary: {
+              type: 'object',
+              properties: {
+                freeSlotsCount: { type: 'number' },
+              },
+            },
           },
         },
       },

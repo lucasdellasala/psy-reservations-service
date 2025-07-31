@@ -69,4 +69,39 @@ export class FindTherapistsDto {
   @Min(0)
   @Type(() => Number)
   offset?: number = 0;
+
+  @ApiPropertyOptional({
+    description: 'Week start date (YYYY-MM-DD) for availability calculation',
+    example: '2025-01-27',
+  })
+  @IsOptional()
+  @IsString()
+  weekStart?: string;
+
+  @ApiPropertyOptional({
+    description: 'Session type ID for availability calculation',
+    example: 'st1',
+  })
+  @IsOptional()
+  @IsString()
+  sessionTypeId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Step in minutes for availability calculation',
+    minimum: 1,
+    default: 15,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Type(() => Number)
+  stepMin?: number = 15;
+
+  @ApiPropertyOptional({
+    description: 'Order by scarcity (ascending by free slots count)',
+    example: 'scarcity',
+  })
+  @IsOptional()
+  @IsString()
+  orderBy?: string;
 }
