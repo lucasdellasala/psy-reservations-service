@@ -11,6 +11,8 @@ Este servicio permite gestionar reservas de sesiones psicológicas, incluyendo:
 - **Tipos de Sesión**: Diferentes duraciones, precios y modalidades (online/in-person)
 - **Ventanas de Disponibilidad**: Horarios disponibles por terapeuta y modalidad
 - **Filtrado Avanzado**: Búsqueda de terapeutas por temas, modalidad y paginación
+- **Gestión de Disponibilidad**: Ventanas de tiempo disponibles por terapeuta y modalidad
+- **Servicios de Tiempo**: Conversión de zonas horarias y manejo de DST
 - **Reservas**: Sistema de reservas con estados (pendiente, confirmado, cancelado)
 
 ## 🏗️ Arquitectura
@@ -35,7 +37,7 @@ src/
 ├── logger/          # Sistema de logging
 ├── prisma/          # Servicio de base de datos
 ├── swagger/         # Configuración de documentación
-├── therapists/      # Gestión de terapeutas
+├── therapists/      # Gestión de terapeutas y disponibilidad
 ├── topics/          # Catálogo de temas
 └── main.ts          # Punto de entrada
 ```
@@ -146,10 +148,11 @@ npm run test:e2e
 - `GET /therapists` - Lista de terapeutas con filtros avanzados
 - `GET /therapists/:id` - Perfil del terapeuta con temas y modalidades
 - `GET /therapists/:id/session-types` - Tipos de sesión del terapeuta
+- `GET /therapists/:id/availability` - Disponibilidad del terapeuta para una semana específica
 
 #### Filtros Disponibles
 
-```bash
+````bash
 # Filtrado por temas (OR logic)
 GET /therapists?topicIds=1,2,3
 
@@ -165,7 +168,19 @@ GET /therapists?limit=10&offset=0
 
 # Combinación de filtros
 GET /therapists?topicIds=1,2&modality=online&limit=5&offset=0
-```
+
+#### Endpoint de Disponibilidad
+
+```bash
+# Obtener disponibilidad para una semana específica
+GET /therapists/:id/availability?weekStart=2024-01-15&sessionTypeId=123&patientTz=America/New_York&stepMin=15
+
+# Parámetros:
+# - weekStart: Fecha de inicio de la semana (YYYY-MM-DD)
+# - sessionTypeId: ID del tipo de sesión
+# - patientTz: Zona horaria del paciente
+# - stepMin: Intervalo de discretización (opcional, default: 15)
+````
 
 ### Documentación Swagger
 
@@ -285,8 +300,10 @@ GET /therapists?topicIds=anxiety,depression&modality=online&limit=5&offset=0
 El proyecto incluye tests unitarios completos para:
 
 - **Controllers**: Tests de endpoints con mocks
-- **Services**: Tests de lógica de negocio y filtrado
+- **Services**: Tests de lógica de negocio, filtrado y disponibilidad
 - **DTOs**: Tests de validación y transformación de datos
+- **Time Services**: Tests de conversión de zonas horarias y DST
+- **Availability Services**: Tests de generación de ventanas de disponibilidad
 - **Edge Cases**: Casos de error y validaciones
 
 ```bash
@@ -296,6 +313,8 @@ npm test
 # Tests específicos
 npm test -- --testPathPattern=topics
 npm test -- --testPathPattern=therapists
+npm test -- --testPathPattern=availability
+npm test -- --testPathPattern=time
 ```
 
 ## 🔧 Configuración de Desarrollo
@@ -322,10 +341,15 @@ npm test -- --testPathPattern=therapists
 - [x] Filtrado por temas con lógica AND/OR
 - [x] Filtrado por modalidad
 - [x] Paginación de resultados
-- [x] Tests unitarios completos (65 tests)
+- [x] Tests unitarios completos (99 tests)
 - [x] Filtros globales de excepciones
 - [x] Validación de datos con class-validator
 - [x] Seeds de datos de ejemplo con modalidades
+- [x] TimeService para manejo de zonas horarias y DST
+- [x] AvailabilityService para gestión de ventanas de disponibilidad
+- [x] Endpoint de disponibilidad con discretización de slots
+- [x] Conversión de zonas horarias para pacientes
+- [x] Detección de solapamientos con sesiones existentes
 
 ## 📄 Licencia
 

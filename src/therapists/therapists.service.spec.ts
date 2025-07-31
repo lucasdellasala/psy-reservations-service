@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TherapistsService } from './therapists.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { AvailabilityService } from './services/availability.service';
+import { TimeService } from '../common/services/time.service';
 import { FindTherapistsDto, Modality } from './dto/find-therapists.dto';
 
 describe('TherapistsService', () => {
@@ -13,7 +15,20 @@ describe('TherapistsService', () => {
     },
     sessionType: {
       findMany: jest.fn(),
+      findUnique: jest.fn(),
     },
+    session: {
+      findMany: jest.fn(),
+    },
+  };
+
+  const mockAvailabilityService = {
+    getWeeklyAvailability: jest.fn(),
+  };
+
+  const mockTimeService = {
+    toTz: jest.fn(),
+    formatForResponse: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -23,6 +38,14 @@ describe('TherapistsService', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: AvailabilityService,
+          useValue: mockAvailabilityService,
+        },
+        {
+          provide: TimeService,
+          useValue: mockTimeService,
         },
       ],
     }).compile();

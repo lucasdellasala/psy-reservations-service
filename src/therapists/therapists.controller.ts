@@ -9,7 +9,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { TherapistsService } from './therapists.service';
 import { TherapistsSwagger } from './therapists.swagger';
 import { FindTherapistsDto } from './dto/find-therapists.dto';
+import { GetAvailabilityDto } from './dto/get-availability.dto';
 import { FindTherapistsQuery } from './decorators/find-therapists-query.decorator';
+import { AvailabilityResponse } from './interfaces/availability.interface';
 
 @ApiTags(TherapistsSwagger.tags)
 @Controller('therapists')
@@ -48,5 +50,29 @@ export class TherapistsController {
       throw new NotFoundException('Therapist not found');
     }
     return sessionTypes;
+  }
+
+  @Get(':id/availability')
+  @ApiOperation({
+    summary: 'Get therapist availability',
+    description: 'Get available time slots for a therapist in a specific week',
+  })
+  @ApiParam({ name: 'id', description: 'Therapist ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Availability retrieved successfully',
+    type: Object,
+  })
+  async getAvailability(
+    @Param('id') id: string,
+    @Query() query: GetAvailabilityDto,
+  ): Promise<AvailabilityResponse> {
+    return this.therapistsService.getAvailability(
+      id,
+      query.sessionTypeId,
+      query.weekStart,
+      query.patientTz,
+      query.stepMin,
+    );
   }
 }
