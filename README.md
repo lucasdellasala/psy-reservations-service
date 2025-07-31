@@ -8,8 +8,9 @@ Este servicio permite gestionar reservas de sesiones psicológicas, incluyendo:
 
 - **Gestión de Terapeutas**: Perfiles con zonas horarias y especialidades
 - **Catálogo de Temas**: Especialidades terapéuticas disponibles
-- **Tipos de Sesión**: Diferentes duraciones y precios
-- **Ventanas de Disponibilidad**: Horarios disponibles por terapeuta
+- **Tipos de Sesión**: Diferentes duraciones, precios y modalidades (online/in-person)
+- **Ventanas de Disponibilidad**: Horarios disponibles por terapeuta y modalidad
+- **Filtrado Avanzado**: Búsqueda de terapeutas por temas, modalidad y paginación
 - **Reservas**: Sistema de reservas con estados (pendiente, confirmado, cancelado)
 
 ## 🏗️ Arquitectura
@@ -142,8 +143,29 @@ npm run test:e2e
 
 ### Therapists (Terapeutas)
 
-- `GET /therapists/:id` - Perfil del terapeuta con temas
+- `GET /therapists` - Lista de terapeutas con filtros avanzados
+- `GET /therapists/:id` - Perfil del terapeuta con temas y modalidades
 - `GET /therapists/:id/session-types` - Tipos de sesión del terapeuta
+
+#### Filtros Disponibles
+
+```bash
+# Filtrado por temas (OR logic)
+GET /therapists?topicIds=1,2,3
+
+# Filtrado por temas (AND logic)
+GET /therapists?topicIds=1,2,3&requireAll=true
+
+# Filtrado por modalidad
+GET /therapists?modality=online
+GET /therapists?modality=in_person
+
+# Paginación
+GET /therapists?limit=10&offset=0
+
+# Combinación de filtros
+GET /therapists?topicIds=1,2&modality=online&limit=5&offset=0
+```
 
 ### Documentación Swagger
 
@@ -158,6 +180,8 @@ npm run test:e2e
   id: string;
   name: string;
   timezone: string;
+  topics: Topic[];
+  modalities: ('online' | 'in_person')[];
   createdAt: DateTime;
 }
 ```
@@ -180,6 +204,7 @@ npm run test:e2e
   name: string
   durationMin: number
   priceMinor?: number
+  modality: 'online' | 'in_person'
 }
 ```
 
@@ -192,6 +217,7 @@ npm run test:e2e
   weekday: number;
   startMin: number;
   endMin: number;
+  modality: 'online' | 'in_person';
 }
 ```
 
@@ -215,12 +241,52 @@ npm run test:e2e
 }
 ```
 
+## 🔍 Funcionalidades de Filtrado
+
+### Filtrado por Temas
+
+```bash
+# Buscar terapeutas que tengan CUALQUIERA de los temas (OR)
+GET /therapists?topicIds=anxiety,depression
+
+# Buscar terapeutas que tengan TODOS los temas (AND)
+GET /therapists?topicIds=anxiety,depression&requireAll=true
+```
+
+### Filtrado por Modalidad
+
+```bash
+# Solo terapeutas que ofrezcan sesiones online
+GET /therapists?modality=online
+
+# Solo terapeutas que ofrezcan sesiones presenciales
+GET /therapists?modality=in_person
+```
+
+### Paginación
+
+```bash
+# Primeros 10 resultados
+GET /therapists?limit=10&offset=0
+
+# Siguientes 10 resultados
+GET /therapists?limit=10&offset=10
+```
+
+### Combinación de Filtros
+
+```bash
+# Terapeutas con temas específicos, modalidad online, paginado
+GET /therapists?topicIds=anxiety,depression&modality=online&limit=5&offset=0
+```
+
 ## 🧪 Testing
 
 El proyecto incluye tests unitarios completos para:
 
 - **Controllers**: Tests de endpoints con mocks
-- **Services**: Tests de lógica de negocio
+- **Services**: Tests de lógica de negocio y filtrado
+- **DTOs**: Tests de validación y transformación de datos
 - **Edge Cases**: Casos de error y validaciones
 
 ```bash
@@ -251,11 +317,15 @@ npm test -- --testPathPattern=therapists
 - [x] Base de datos PostgreSQL con Prisma
 - [x] Módulo de health checks
 - [x] Módulo de topics
-- [x] Módulo de therapists
-- [x] Tests unitarios completos
+- [x] Módulo de therapists con filtrado avanzado
+- [x] Sistema de modalidades (online/in-person)
+- [x] Filtrado por temas con lógica AND/OR
+- [x] Filtrado por modalidad
+- [x] Paginación de resultados
+- [x] Tests unitarios completos (65 tests)
 - [x] Filtros globales de excepciones
-- [x] Validación de datos
-- [x] Seeds de datos de ejemplo
+- [x] Validación de datos con class-validator
+- [x] Seeds de datos de ejemplo con modalidades
 
 ## 📄 Licencia
 
