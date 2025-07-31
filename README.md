@@ -16,6 +16,9 @@ Este servicio permite gestionar reservas de sesiones psicológicas, incluyendo:
 - **Sistema de Reservas**: Creación de sesiones con idempotencia y control de concurrencia
 - **Control de Concurrencia**: Locks por terapeuta para evitar conflictos
 - **Validación de Disponibilidad**: Verificación automática de ventanas y solapamientos
+- **Gestión de Sesiones**: Obtener y cancelar sesiones con conversión de zonas horarias
+- **Jobs Periódicos**: Cancelación automática de sesiones pendientes expiradas
+- **Cálculo de Disponibilidad**: Conteo de slots libres por terapeuta y ordenamiento por escasez
 
 ## 🏗️ Arquitectura
 
@@ -42,6 +45,7 @@ src/
 ├── therapists/      # Gestión de terapeutas y disponibilidad
 ├── topics/          # Catálogo de temas
 ├── sessions/        # Sistema de reservas y sesiones
+├── jobs/            # Jobs periódicos y tareas automáticas
 └── main.ts          # Punto de entrada
 ```
 
@@ -156,6 +160,8 @@ npm run test:e2e
 ### Sessions (Sesiones)
 
 - `POST /sessions` - Crear una nueva sesión con idempotencia
+- `GET /sessions/:id` - Obtener detalles de una sesión con conversión de zonas horarias
+- `PATCH /sessions/:id/cancel` - Cancelar una sesión (idempotente)
 
 #### Filtros Disponibles
 
@@ -176,6 +182,9 @@ GET /therapists?limit=10&offset=0
 # Combinación de filtros
 GET /therapists?topicIds=1,2&modality=online&limit=5&offset=0
 
+# Cálculo de disponibilidad y ordenamiento por escasez
+GET /therapists?weekStart=2025-01-27&sessionTypeId=st1&stepMin=15&orderBy=scarcity
+
 #### Endpoint de Disponibilidad
 
 ```bash
@@ -191,7 +200,7 @@ GET /therapists/:id/availability?weekStart=2024-01-15&sessionTypeId=123&patientT
 
 #### Endpoint de Sesiones
 
-```bash
+````bash
 # Crear una nueva sesión
 POST /sessions
 Headers:
@@ -215,7 +224,27 @@ Body:
 # - 409: SLOT_TAKEN - Horario ocupado
 # - 422: OUT_OF_WINDOW - Fuera de ventana disponible
 # - 400: Datos inválidos o Idempotency-Key faltante
-```
+
+#### Endpoints de Gestión de Sesiones
+
+```bash
+# Obtener detalles de una sesión
+GET /sessions/:id
+
+# Respuesta incluye:
+# - Todos los campos de la sesión
+# - startInPatientTz y endInPatientTz (convertidos a zona horaria del paciente)
+# - Información del tipo de sesión
+
+# Cancelar una sesión (idempotente)
+PATCH /sessions/:id/cancel
+
+# Respuestas:
+# - 200: Sesión cancelada exitosamente o ya estaba cancelada
+# - 404: Sesión no encontrada
+````
+
+````
 
 ### Documentación Swagger
 
@@ -232,9 +261,12 @@ Body:
   timezone: string;
   topics: Topic[];
   modalities: ('online' | 'in_person')[];
+  availabilitySummary?: {
+    freeSlotsCount: number;
+  };
   createdAt: DateTime;
 }
-```
+````
 
 ### Topic
 
@@ -288,6 +320,13 @@ Body:
   idempotencyKey?: string
   createdAt: DateTime
   canceledAt?: DateTime
+  sessionType?: {
+    name: string
+    durationMin: number
+    modality: 'online' | 'in_person'
+  }
+  startInPatientTz?: string
+  endInPatientTz?: string
 }
 ```
 
@@ -339,6 +378,8 @@ GET /therapists?topicIds=anxiety,depression&modality=online&limit=5&offset=0
 - **Validación de Disponibilidad**: Verifica que la sesión encaje en una ventana disponible
 - **Detección de Solapamientos**: Previene reservas que se superpongan con sesiones existentes
 - **Conversión de Zonas Horarias**: Maneja automáticamente las zonas horarias de pacientes
+- **Gestión de Sesiones**: Obtener y cancelar sesiones con conversión automática de zonas horarias
+- **Jobs Periódicos**: Cancelación automática de sesiones pendientes que han expirado
 
 ### Flujo de Creación de Sesión
 
@@ -350,6 +391,15 @@ GET /therapists?topicIds=anxiety,depression&modality=online&limit=5&offset=0
 6. **Verificación de Solapamientos**: Usa `hasOverlap` para detectar conflictos
 7. **Creación de Sesión**: Inserta la sesión con estado `CONFIRMED`
 
+### Jobs Periódicos
+
+El sistema incluye un job que se ejecuta cada 5 minutos para:
+
+- **Buscar sesiones expiradas**: Sesiones con `status = 'PENDING'` donde `startUtc < now()`
+- **Cancelación automática**: Actualiza a `status = 'CANCELED'` y establece `canceledAt = now()`
+- **Logging detallado**: Registra cantidad de sesiones canceladas y detalles de cada una
+- **Manejo de errores**: Continúa ejecutándose aunque falle el procesamiento de algunos terapeutas
+
 ## 🧪 Testing
 
 El proyecto incluye tests unitarios completos para:
@@ -360,6 +410,7 @@ El proyecto incluye tests unitarios completos para:
 - **Time Services**: Tests de conversión de zonas horarias y DST
 - **Availability Services**: Tests de generación de ventanas de disponibilidad
 - **Session Services**: Tests de creación de sesiones y validaciones
+- **Jobs Services**: Tests de jobs periódicos y cancelación automática
 - **Edge Cases**: Casos de error y validaciones
 
 ```bash
@@ -372,6 +423,7 @@ npm test -- --testPathPattern=therapists
 npm test -- --testPathPattern=availability
 npm test -- --testPathPattern=time
 npm test -- --testPathPattern=sessions
+npm test -- --testPathPattern=jobs
 ```
 
 ## 🔧 Configuración de Desarrollo
@@ -398,7 +450,7 @@ npm test -- --testPathPattern=sessions
 - [x] Filtrado por temas con lógica AND/OR
 - [x] Filtrado por modalidad
 - [x] Paginación de resultados
-- [x] Tests unitarios completos (125+ tests)
+- [x] Tests unitarios completos (130+ tests)
 - [x] Filtros globales de excepciones
 - [x] Validación de datos con class-validator
 - [x] Seeds de datos de ejemplo con modalidades
@@ -411,6 +463,10 @@ npm test -- --testPathPattern=sessions
 - [x] Control de concurrencia con locks por terapeuta
 - [x] Validación de disponibilidad y ventanas
 - [x] Documentación Swagger modularizada
+- [x] Gestión de sesiones (obtener y cancelar)
+- [x] Jobs periódicos para cancelación automática
+- [x] Cálculo de disponibilidad en listado de terapeutas
+- [x] Ordenamiento por escasez de slots disponibles
 
 ## 📄 Licencia
 
