@@ -39,11 +39,12 @@ model TherapistTopic {
 }
 
 model SessionType {
-  id          String    @id @default(cuid())
+  id          String           @id @default(cuid())
   therapistId String
   name        String
   durationMin Int
   priceMinor  Int?
+  modality    SessionModality
   therapist   Therapist @relation(fields: [therapistId], references: [id], onDelete: Cascade)
   sessions    Session[]
 
@@ -51,11 +52,12 @@ model SessionType {
 }
 
 model AvailabilityWindow {
-  id          String    @id @default(cuid())
+  id          String           @id @default(cuid())
   therapistId String
   weekday     Int
   startMin    Int
   endMin      Int
+  modality    SessionModality
   therapist   Therapist @relation(fields: [therapistId], references: [id], onDelete: Cascade)
 
   @@map("availability_windows")
@@ -85,4 +87,9 @@ enum SessionStatus {
   PENDING
   CONFIRMED
   CANCELED
+}
+
+enum SessionModality {
+  online
+  in_person
 }

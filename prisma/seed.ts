@@ -85,73 +85,189 @@ async function main() {
 
   // Create Session Types
   const sessionTypes = await Promise.all([
-    // María's session types
+    // María's session types - Online and In-person
     prisma.sessionType.create({
       data: {
         therapistId: therapists[0].id,
-        name: 'Initial Consultation',
+        name: 'Online Consultation',
         durationMin: 60,
         priceMinor: 5000, // $50.00
+        modality: 'online',
       },
     }),
     prisma.sessionType.create({
       data: {
         therapistId: therapists[0].id,
-        name: 'Extended Session',
+        name: 'Online Extended Session',
         durationMin: 120,
         priceMinor: 9000, // $90.00
+        modality: 'online',
       },
     }),
-    // Sarah's session types
+    prisma.sessionType.create({
+      data: {
+        therapistId: therapists[0].id,
+        name: 'In-Person Consultation',
+        durationMin: 60,
+        priceMinor: 6000, // $60.00
+        modality: 'in_person',
+      },
+    }),
+    prisma.sessionType.create({
+      data: {
+        therapistId: therapists[0].id,
+        name: 'In-Person Extended Session',
+        durationMin: 120,
+        priceMinor: 11000, // $110.00
+        modality: 'in_person',
+      },
+    }),
+    // Sarah's session types - Online and In-person
     prisma.sessionType.create({
       data: {
         therapistId: therapists[1].id,
-        name: 'Trauma Therapy',
+        name: 'Online Trauma Therapy',
         durationMin: 60,
         priceMinor: 7500, // $75.00
+        modality: 'online',
       },
     }),
     prisma.sessionType.create({
       data: {
         therapistId: therapists[1].id,
-        name: 'Intensive Session',
+        name: 'Online Intensive Session',
         durationMin: 120,
         priceMinor: 14000, // $140.00
+        modality: 'online',
       },
     }),
-    // Carlos's session types
+    prisma.sessionType.create({
+      data: {
+        therapistId: therapists[1].id,
+        name: 'In-Person Trauma Therapy',
+        durationMin: 60,
+        priceMinor: 8500, // $85.00
+        modality: 'in_person',
+      },
+    }),
+    prisma.sessionType.create({
+      data: {
+        therapistId: therapists[1].id,
+        name: 'In-Person Intensive Session',
+        durationMin: 120,
+        priceMinor: 16000, // $160.00
+        modality: 'in_person',
+      },
+    }),
+    // Carlos's session types - Online and In-person
     prisma.sessionType.create({
       data: {
         therapistId: therapists[2].id,
-        name: 'Family Session',
+        name: 'Online Family Session',
         durationMin: 60,
         priceMinor: 6000, // $60.00
+        modality: 'online',
       },
     }),
-    // Emma's session types
+    prisma.sessionType.create({
+      data: {
+        therapistId: therapists[2].id,
+        name: 'Online Extended Family Session',
+        durationMin: 120,
+        priceMinor: 11000, // $110.00
+        modality: 'online',
+      },
+    }),
+    prisma.sessionType.create({
+      data: {
+        therapistId: therapists[2].id,
+        name: 'In-Person Family Session',
+        durationMin: 60,
+        priceMinor: 7000, // $70.00
+        modality: 'in_person',
+      },
+    }),
+    prisma.sessionType.create({
+      data: {
+        therapistId: therapists[2].id,
+        name: 'In-Person Extended Family Session',
+        durationMin: 120,
+        priceMinor: 13000, // $130.00
+        modality: 'in_person',
+      },
+    }),
+    // Emma's session types - Online and In-person
     prisma.sessionType.create({
       data: {
         therapistId: therapists[3].id,
-        name: 'Career Counseling',
+        name: 'Online Career Counseling',
         durationMin: 60,
         priceMinor: 6500, // $65.00
+        modality: 'online',
       },
     }),
     prisma.sessionType.create({
       data: {
         therapistId: therapists[3].id,
-        name: 'Extended Career Session',
+        name: 'Online Extended Career Session',
         durationMin: 120,
         priceMinor: 12000, // $120.00
+        modality: 'online',
       },
     }),
-    // Alejandro's session types
+    prisma.sessionType.create({
+      data: {
+        therapistId: therapists[3].id,
+        name: 'In-Person Career Counseling',
+        durationMin: 60,
+        priceMinor: 7500, // $75.00
+        modality: 'in_person',
+      },
+    }),
+    prisma.sessionType.create({
+      data: {
+        therapistId: therapists[3].id,
+        name: 'In-Person Extended Career Session',
+        durationMin: 120,
+        priceMinor: 14000, // $140.00
+        modality: 'in_person',
+      },
+    }),
+    // Alejandro's session types - Online and In-person
     prisma.sessionType.create({
       data: {
         therapistId: therapists[4].id,
-        name: 'Grief Counseling',
+        name: 'Online Grief Counseling',
         durationMin: 60,
         priceMinor: 5500, // $55.00
+        modality: 'online',
+      },
+    }),
+    prisma.sessionType.create({
+      data: {
+        therapistId: therapists[4].id,
+        name: 'Online Extended Grief Session',
+        durationMin: 120,
+        priceMinor: 10000, // $100.00
+        modality: 'online',
+      },
+    }),
+    prisma.sessionType.create({
+      data: {
+        therapistId: therapists[4].id,
+        name: 'In-Person Grief Counseling',
+        durationMin: 60,
+        priceMinor: 6500, // $65.00
+        modality: 'in_person',
+      },
+    }),
+    prisma.sessionType.create({
+      data: {
+        therapistId: therapists[4].id,
+        name: 'In-Person Extended Grief Session',
+        durationMin: 120,
+        priceMinor: 12000, // $120.00
+        modality: 'in_person',
       },
     }),
   ]);
@@ -160,13 +276,15 @@ async function main() {
 
   // Create Availability Windows
   const availabilityWindows = await Promise.all([
-    // María (Argentina) - Monday, Wednesday, Friday
+    // María (Argentina) - Online and In-person availability
+    // Online: Monday, Wednesday
     prisma.availabilityWindow.create({
       data: {
         therapistId: therapists[0].id,
         weekday: 1, // Monday
         startMin: 540, // 9:00 AM
         endMin: 1020, // 5:00 PM
+        modality: 'online',
       },
     }),
     prisma.availabilityWindow.create({
@@ -175,31 +293,38 @@ async function main() {
         weekday: 3, // Wednesday
         startMin: 540,
         endMin: 1020,
+        modality: 'online',
       },
     }),
+    // In-person: Friday
     prisma.availabilityWindow.create({
       data: {
         therapistId: therapists[0].id,
         weekday: 5, // Friday
         startMin: 540,
         endMin: 780, // 1:00 PM
+        modality: 'in_person',
       },
     }),
-    // Sarah (US) - Tuesday, Thursday, Saturday
+    // Sarah (US) - Online and In-person availability
+    // Online: Tuesday
     prisma.availabilityWindow.create({
       data: {
         therapistId: therapists[1].id,
         weekday: 2, // Tuesday
         startMin: 600, // 10:00 AM
         endMin: 1080, // 6:00 PM
+        modality: 'online',
       },
     }),
+    // In-person: Thursday, Saturday
     prisma.availabilityWindow.create({
       data: {
         therapistId: therapists[1].id,
         weekday: 4, // Thursday
         startMin: 600,
         endMin: 1080,
+        modality: 'in_person',
       },
     }),
     prisma.availabilityWindow.create({
@@ -208,57 +333,79 @@ async function main() {
         weekday: 6, // Saturday
         startMin: 600,
         endMin: 900, // 3:00 PM
+        modality: 'in_person',
       },
     }),
-    // Carlos (Spain) - Monday, Wednesday, Friday
+    // Carlos (Spain) - Online and In-person availability
+    // Online: Monday
     prisma.availabilityWindow.create({
       data: {
         therapistId: therapists[2].id,
         weekday: 1,
         startMin: 480, // 8:00 AM
         endMin: 960, // 4:00 PM
+        modality: 'online',
       },
     }),
+    // In-person: Wednesday, Friday
     prisma.availabilityWindow.create({
       data: {
         therapistId: therapists[2].id,
         weekday: 3,
         startMin: 480,
         endMin: 960,
+        modality: 'in_person',
       },
     }),
-    // Emma (UK) - Tuesday, Thursday
+    prisma.availabilityWindow.create({
+      data: {
+        therapistId: therapists[2].id,
+        weekday: 5,
+        startMin: 480,
+        endMin: 720, // 12:00 PM
+        modality: 'in_person',
+      },
+    }),
+    // Emma (UK) - Online and In-person availability
+    // Online: Tuesday
     prisma.availabilityWindow.create({
       data: {
         therapistId: therapists[3].id,
         weekday: 2,
         startMin: 540,
         endMin: 1020,
+        modality: 'online',
       },
     }),
+    // In-person: Thursday
     prisma.availabilityWindow.create({
       data: {
         therapistId: therapists[3].id,
         weekday: 4,
         startMin: 540,
         endMin: 1020,
+        modality: 'in_person',
       },
     }),
-    // Alejandro (Mexico) - Monday, Wednesday, Friday
+    // Alejandro (Mexico) - Online and In-person availability
+    // Online: Monday
     prisma.availabilityWindow.create({
       data: {
         therapistId: therapists[4].id,
         weekday: 1,
         startMin: 600,
         endMin: 1080,
+        modality: 'online',
       },
     }),
+    // In-person: Wednesday, Friday
     prisma.availabilityWindow.create({
       data: {
         therapistId: therapists[4].id,
         weekday: 3,
         startMin: 600,
         endMin: 1080,
+        modality: 'in_person',
       },
     }),
     prisma.availabilityWindow.create({
@@ -267,6 +414,7 @@ async function main() {
         weekday: 5,
         startMin: 600,
         endMin: 900,
+        modality: 'in_person',
       },
     }),
   ]);

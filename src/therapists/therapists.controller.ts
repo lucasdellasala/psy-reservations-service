@@ -8,6 +8,13 @@ import { TherapistsSwagger } from './therapists.swagger';
 export class TherapistsController {
   constructor(private readonly therapistsService: TherapistsService) {}
 
+  @Get()
+  @ApiOperation(TherapistsSwagger.getAll.operation)
+  @ApiResponse(TherapistsSwagger.getAll.response)
+  async findAll(): Promise<any[]> {
+    return this.therapistsService.findAll();
+  }
+
   @Get(':id')
   @ApiOperation(TherapistsSwagger.getOne.operation)
   @ApiParam(TherapistsSwagger.getOne.param)

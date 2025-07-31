@@ -1,11 +1,46 @@
 export const TherapistsSwagger = {
   tags: 'therapists',
+  getAll: {
+    operation: { summary: 'Get all therapists' },
+    response: {
+      status: 200,
+      description: 'List of therapists with topics and modalities',
+      schema: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+            timezone: { type: 'string' },
+            topics: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' },
+                },
+              },
+            },
+            modalities: {
+              type: 'array',
+              items: {
+                type: 'string',
+                enum: ['online', 'in_person'],
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   getOne: {
     operation: { summary: 'Get therapist profile by ID' },
     param: { name: 'id', description: 'Therapist ID' },
     response: {
       status: 200,
-      description: 'Therapist profile with topics',
+      description: 'Therapist profile with topics and modalities',
       schema: {
         type: 'object',
         properties: {
@@ -22,6 +57,13 @@ export const TherapistsSwagger = {
               },
             },
           },
+          modalities: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: ['online', 'in_person'],
+            },
+          },
         },
       },
     },
@@ -32,7 +74,7 @@ export const TherapistsSwagger = {
     param: { name: 'id', description: 'Therapist ID' },
     response: {
       status: 200,
-      description: 'List of therapist session types',
+      description: 'List of therapist session types with modality',
       schema: {
         type: 'array',
         items: {
@@ -41,7 +83,10 @@ export const TherapistsSwagger = {
             id: { type: 'string' },
             name: { type: 'string' },
             durationMin: { type: 'number' },
-            priceMinor: { type: 'number' },
+            modality: {
+              type: 'string',
+              enum: ['online', 'in_person'],
+            },
           },
         },
       },

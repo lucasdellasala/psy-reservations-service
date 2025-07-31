@@ -241,17 +241,6 @@ npm test -- --testPathPattern=therapists
 - **Husky**: Git hooks
 - **lint-staged**: Linting en commits
 
-### Configuración de Git
-
-```bash
-# Configurar autocrlf para Windows
-git config core.autocrlf true
-
-# Configurar usuario
-git config user.name "Tu Nombre"
-git config user.email "tu@email.com"
-```
-
 ## 📊 Estado del Proyecto
 
 ### ✅ Implementado
@@ -274,4 +263,4 @@ Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) par
 
 ## 👥 Autor
 
-- **Lucas Della Sala** - _Desarrollo inicial_ - [@lucasdellasala](https://github.com/lucasdellasala)
+- **Lucas Della Sala** - [@lucasdellasala](https://github.com/lucasdellasala)
