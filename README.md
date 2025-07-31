@@ -13,7 +13,9 @@ Este servicio permite gestionar reservas de sesiones psicológicas, incluyendo:
 - **Filtrado Avanzado**: Búsqueda de terapeutas por temas, modalidad y paginación
 - **Gestión de Disponibilidad**: Ventanas de tiempo disponibles por terapeuta y modalidad
 - **Servicios de Tiempo**: Conversión de zonas horarias y manejo de DST
-- **Reservas**: Sistema de reservas con estados (pendiente, confirmado, cancelado)
+- **Sistema de Reservas**: Creación de sesiones con idempotencia y control de concurrencia
+- **Control de Concurrencia**: Locks por terapeuta para evitar conflictos
+- **Validación de Disponibilidad**: Verificación automática de ventanas y solapamientos
 
 ## 🏗️ Arquitectura
 
@@ -39,6 +41,7 @@ src/
 ├── swagger/         # Configuración de documentación
 ├── therapists/      # Gestión de terapeutas y disponibilidad
 ├── topics/          # Catálogo de temas
+├── sessions/        # Sistema de reservas y sesiones
 └── main.ts          # Punto de entrada
 ```
 
@@ -150,6 +153,10 @@ npm run test:e2e
 - `GET /therapists/:id/session-types` - Tipos de sesión del terapeuta
 - `GET /therapists/:id/availability` - Disponibilidad del terapeuta para una semana específica
 
+### Sessions (Sesiones)
+
+- `POST /sessions` - Crear una nueva sesión con idempotencia
+
 #### Filtros Disponibles
 
 ````bash
@@ -181,6 +188,34 @@ GET /therapists/:id/availability?weekStart=2024-01-15&sessionTypeId=123&patientT
 # - patientTz: Zona horaria del paciente
 # - stepMin: Intervalo de discretización (opcional, default: 15)
 ````
+
+#### Endpoint de Sesiones
+
+```bash
+# Crear una nueva sesión
+POST /sessions
+Headers:
+  Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
+  Content-Type: application/json
+
+Body:
+{
+  "therapistId": "cmdqpytum000buyfo2i65xv5x",
+  "sessionTypeId": "cmdqpyvkw000yuyfofb47i1dx",
+  "startUtc": "2025-01-29T20:00:00Z",
+  "patientId": "user123",
+  "patientName": "Lucas",
+  "patientEmail": "lucas@mail.com",
+  "patientTz": "America/Argentina/Buenos_Aires"
+}
+
+# Respuestas:
+# - 201: Sesión creada exitosamente
+# - 200: Sesión ya existe (idempotencia)
+# - 409: SLOT_TAKEN - Horario ocupado
+# - 422: OUT_OF_WINDOW - Fuera de ventana disponible
+# - 400: Datos inválidos o Idempotency-Key faltante
+```
 
 ### Documentación Swagger
 
@@ -249,7 +284,7 @@ GET /therapists/:id/availability?weekStart=2024-01-15&sessionTypeId=123&patientT
   startUtc: DateTime
   endUtc: DateTime
   patientTz: string
-  status: 'pending' | 'confirmed' | 'canceled'
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELED'
   idempotencyKey?: string
   createdAt: DateTime
   canceledAt?: DateTime
@@ -295,6 +330,26 @@ GET /therapists?limit=10&offset=10
 GET /therapists?topicIds=anxiety,depression&modality=online&limit=5&offset=0
 ```
 
+## 🔒 Sistema de Reservas
+
+### Características Principales
+
+- **Idempotencia**: Garantiza que múltiples requests con el mismo `Idempotency-Key` no creen sesiones duplicadas
+- **Control de Concurrencia**: Locks por terapeuta usando `pg_advisory_xact_lock` para evitar conflictos
+- **Validación de Disponibilidad**: Verifica que la sesión encaje en una ventana disponible
+- **Detección de Solapamientos**: Previene reservas que se superpongan con sesiones existentes
+- **Conversión de Zonas Horarias**: Maneja automáticamente las zonas horarias de pacientes
+
+### Flujo de Creación de Sesión
+
+1. **Validación de Idempotencia**: Verifica si ya existe una sesión con el mismo `Idempotency-Key`
+2. **Obtención de Datos**: Recupera `durationMin` y `modality` del `SessionType`
+3. **Cálculo de Horarios**: Calcula `endUtc` basado en `startUtc` + `durationMin`
+4. **Validación de Ventana**: Verifica que el horario encaje en una `AvailabilityWindow`
+5. **Lock de Terapeuta**: Adquiere lock para evitar conflictos concurrentes
+6. **Verificación de Solapamientos**: Usa `hasOverlap` para detectar conflictos
+7. **Creación de Sesión**: Inserta la sesión con estado `CONFIRMED`
+
 ## 🧪 Testing
 
 El proyecto incluye tests unitarios completos para:
@@ -304,6 +359,7 @@ El proyecto incluye tests unitarios completos para:
 - **DTOs**: Tests de validación y transformación de datos
 - **Time Services**: Tests de conversión de zonas horarias y DST
 - **Availability Services**: Tests de generación de ventanas de disponibilidad
+- **Session Services**: Tests de creación de sesiones y validaciones
 - **Edge Cases**: Casos de error y validaciones
 
 ```bash
@@ -315,6 +371,7 @@ npm test -- --testPathPattern=topics
 npm test -- --testPathPattern=therapists
 npm test -- --testPathPattern=availability
 npm test -- --testPathPattern=time
+npm test -- --testPathPattern=sessions
 ```
 
 ## 🔧 Configuración de Desarrollo
@@ -341,7 +398,7 @@ npm test -- --testPathPattern=time
 - [x] Filtrado por temas con lógica AND/OR
 - [x] Filtrado por modalidad
 - [x] Paginación de resultados
-- [x] Tests unitarios completos (99 tests)
+- [x] Tests unitarios completos (125+ tests)
 - [x] Filtros globales de excepciones
 - [x] Validación de datos con class-validator
 - [x] Seeds de datos de ejemplo con modalidades
@@ -350,6 +407,10 @@ npm test -- --testPathPattern=time
 - [x] Endpoint de disponibilidad con discretización de slots
 - [x] Conversión de zonas horarias para pacientes
 - [x] Detección de solapamientos con sesiones existentes
+- [x] Sistema de reservas con idempotencia
+- [x] Control de concurrencia con locks por terapeuta
+- [x] Validación de disponibilidad y ventanas
+- [x] Documentación Swagger modularizada
 
 ## 📄 Licencia
 
