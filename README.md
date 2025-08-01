@@ -57,6 +57,10 @@ src/
 - PostgreSQL
 - npm o yarn
 
+### Deploy en Fly.io
+
+Para deployar en Fly.io, ver [DEPLOY.md](DEPLOY.md) para instrucciones detalladas.
+
 ### 1. Clonar y Instalar
 
 ```bash
