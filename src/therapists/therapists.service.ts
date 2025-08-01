@@ -6,7 +6,6 @@ import { TimeService } from '../common/services/time.service';
 import { DateTime } from 'luxon';
 import {
   AvailabilityResponse,
-  DailyAvailability,
   BookableSlot,
 } from './interfaces/availability.interface';
 
@@ -37,7 +36,13 @@ export class TherapistsService {
         },
         sessionTypes: {
           select: {
+            id: true,
+            name: true,
+            durationMin: true,
             modality: true,
+          },
+          orderBy: {
+            durationMin: 'asc',
           },
         },
       },
@@ -57,6 +62,7 @@ export class TherapistsService {
       timezone: therapist.timezone,
       topics: therapist.therapistTopics.map(tt => tt.topic),
       modalities,
+      sessionTypes: therapist.sessionTypes,
     };
   }
 
@@ -265,6 +271,11 @@ export class TherapistsService {
     patientTz: string,
     stepMin: number = 15,
   ): Promise<AvailabilityResponse> {
+    // Validar que sessionTypeId esté presente (los otros tienen valores por defecto)
+    if (!sessionTypeId) {
+      throw new Error('sessionTypeId is required');
+    }
+
     const sessionType = await this.prisma.sessionType.findUnique({
       where: { id: sessionTypeId },
       select: { durationMin: true, modality: true },
@@ -297,28 +308,75 @@ export class TherapistsService {
       endUtc: session.endUtc.toISOString(),
     }));
 
-    const availability: DailyAvailability = {};
+    const availability: { [date: string]: any[] } = {};
+    const today = DateTime.now().setZone(patientTz).startOf('day');
 
     for (const windows of Object.values(weeklyAvailability)) {
       for (const window of windows as any[]) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const date = window.date as string;
+        const windowDate = DateTime.fromISO(date);
+
+        // Solo incluir días futuros (hoy y posteriores)
+        if (windowDate < today) {
+          continue;
+        }
+
+        // Para hoy, solo incluir slots que sean al menos 2 horas después de la hora actual
+        const now = DateTime.now().setZone(patientTz);
+        const isToday = windowDate.hasSame(today, 'day');
+
         if (!availability[date as keyof typeof availability]) {
           availability[date as keyof typeof availability] = [];
         }
 
-        const bookableStarts = this.generateBookableSlots(
+        const bookableSlots = this.generateBookableSlots(
           window as { startUtc: string; endUtc: string },
           sessionType.durationMin,
-          stepMin,
+          sessionType.durationMin, // Usar la duración de la sesión como step
           existingSessionsFormatted,
           patientTz,
         );
 
-        availability[date as keyof typeof availability].push({
-          ...window,
-          bookableStarts,
+        // Filtrar slots según la hora actual (si es hoy)
+        const filteredSlots = bookableSlots.filter(slot => {
+          if (isToday) {
+            const slotStart = this.timeService.toTz(
+              DateTime.fromISO(slot.startUtc),
+              patientTz,
+            );
+            const minStartTime = now.plus({ hours: 2 }); // Mínimo 2 horas después de ahora
+
+            return slotStart >= minStartTime;
+          }
+          return true; // Para otros días, incluir todos los slots
         });
+
+        // Solo incluir slots disponibles
+        if (filteredSlots.length > 0) {
+          const slotsWithDate = filteredSlots.map(slot => {
+            const startInPatientTz = this.timeService.toTz(
+              DateTime.fromISO(slot.startUtc),
+              patientTz,
+            );
+            const endInPatientTz = this.timeService.toTz(
+              DateTime.fromISO(slot.endUtc),
+              patientTz,
+            );
+
+            return {
+              ...slot,
+              date: date,
+              startTime: startInPatientTz.toFormat('HH:mm'),
+              endTime: endInPatientTz.toFormat('HH:mm'),
+              id: `${date}_${startInPatientTz.toFormat('HH:mm')}_${endInPatientTz.toFormat('HH:mm')}`,
+            };
+          });
+
+          availability[date as keyof typeof availability].push(
+            ...slotsWithDate,
+          );
+        }
       }
     }
 

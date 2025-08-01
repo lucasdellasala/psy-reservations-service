@@ -52,10 +52,7 @@ export class AvailabilityService {
         therapistId,
         modality,
       },
-      orderBy: {
-        weekday: 'asc',
-        startMin: 'asc',
-      },
+      orderBy: [{ weekday: 'asc' }, { startMin: 'asc' }],
     });
 
     return this.generateConcreteWindows(

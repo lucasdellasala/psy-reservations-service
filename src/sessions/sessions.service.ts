@@ -92,7 +92,7 @@ export class SessionsService {
             startUtc: startDateTime.toJSDate(),
             endUtc: endDateTime.toJSDate(),
             patientTz,
-            status: 'CONFIRMED',
+            status: 'PENDING', // Las sesiones nuevas deben estar en PENDING
             idempotencyKey,
           },
         });

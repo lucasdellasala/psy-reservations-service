@@ -70,10 +70,24 @@ npm install
 Crear archivo `.env`:
 
 ```env
-PORT=3000
+# Puerto del servidor
+PORT=5000
+
+# Entorno
 NODE_ENV=development
+
+# Zona horaria
 TZ=UTC
+
+# Base de datos
 DATABASE_URL=postgresql://postgres:password@localhost:5432/psy_reservations
+
+# Configuración de CORS
+
+# O usar variables individuales
+CORS_ORIGIN_1=https://mi-app.com
+CORS_ORIGIN_2=https://staging.mi-app.com
+CORS_ORIGIN_3=https://admin.mi-app.com
 ```
 
 ### 3. Configurar Base de Datos
@@ -87,6 +101,21 @@ npm run db:migrate
 
 # Poblar con datos de ejemplo
 npm run db:seed
+```
+
+### 4. Configuración de CORS
+
+El servicio incluye configuración flexible de CORS que permite:
+
+- **Orígenes por defecto**: `localhost:3000`, `127.0.0.1:3000`, `localhost:3001`, `127.0.0.1:3001`
+- **Orígenes adicionales**: Usar `CORS_ORIGIN_1`, `CORS_ORIGIN_2`, etc.
+- **Logging**: Los orígenes configurados se muestran en consola al iniciar
+
+```bash
+
+# O usar variables individuales
+CORS_ORIGIN_1=https://mi-app.com
+CORS_ORIGIN_2=https://staging.mi-app.com
 ```
 
 ## 🛠️ Scripts Disponibles

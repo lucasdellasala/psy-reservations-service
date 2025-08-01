@@ -29,3 +29,15 @@ export interface AvailabilityResponse {
   stepMin: number;
   availability: DailyAvailability;
 }
+
+export interface MultiSessionTypeAvailabilityResponse {
+  therapistId: string;
+  weekStart: string;
+  patientTz: string;
+  stepMin: number;
+  sessionTypes: Array<{
+    sessionTypeId: string;
+    sessionTypeName: string;
+    availability: DailyAvailability;
+  }>;
+}

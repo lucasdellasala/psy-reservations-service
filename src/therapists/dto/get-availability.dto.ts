@@ -2,14 +2,16 @@ import { IsString, IsOptional, IsNumber, Min, Max } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 export class GetAvailabilityDto {
+  @IsOptional()
   @IsString()
-  weekStart: string;
+  weekStart?: string;
 
   @IsString()
   sessionTypeId: string;
 
+  @IsOptional()
   @IsString()
-  patientTz: string;
+  patientTz?: string;
 
   @IsOptional()
   @Type(() => Number)
